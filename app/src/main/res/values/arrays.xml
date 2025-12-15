@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="item_categories">
+        <item>Electronics</item>
+        <item>Office Supplies</item>
+        <item>Tools &amp; Hardware</item>
+        <item>Clothing &amp; Apparel</item>
+        <item>Food &amp; Beverages</item>
+        <item>Books &amp; Media</item>
+        <item>Sports &amp; Recreation</item>
+        <item>Health &amp; Beauty</item>
+        <item>Home &amp; Garden</item>
+        <item>Automotive</item>
+        <item>Other</item>
+    </string-array>
+</resources>

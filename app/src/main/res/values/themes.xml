@@ -1,0 +1,32 @@
+<resources>
+
+    <style name="Theme.SmartInventory" parent="Theme.Material3.Light.NoActionBar">
+
+        <!-- Primary -->
+        <item name="colorPrimary">@color/primary_color</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+
+        <!-- Secondary -->
+        <item name="colorSecondary">@color/secondary_color</item>
+        <item name="colorOnSecondary">@color/on_secondary</item>
+
+        <!-- Background -->
+        <!-- Must be "android:colorBackground" because M3 uses system background -->
+        <item name="android:colorBackground">@color/background_color</item>
+        <item name="colorOnBackground">@color/on_background</item>
+
+        <!-- Surfaces -->
+        <item name="colorSurface">@color/surface_color</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorSurfaceVariant">@color/surface_variant</item>
+        <item name="colorOutline">@color/outline_color</item>
+
+        <!-- System bars -->
+        <item name="android:statusBarColor">@color/primary_color</item>
+        <item name="android:navigationBarColor">@color/primary_color</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+
+    </style>
+
+</resources>

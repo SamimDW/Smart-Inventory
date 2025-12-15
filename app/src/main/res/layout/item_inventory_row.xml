@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- item_inventory_row.xml -->
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="8dp"
+    android:layout_marginTop="2dp"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="?attr/colorSurface">
+
+    <LinearLayout
+        android:id="@+id/rowRoot"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingVertical="16dp"
+        android:paddingHorizontal="16dp"
+        android:gravity="center_vertical"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true">
+
+        <!-- Item Name and Description -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2.5"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/itemNameText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Sample Item"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:importantForAccessibility="yes" />
+
+            <TextView
+                android:id="@+id/itemDescriptionText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Item description"
+                android:textSize="12sp"
+                android:textColor="?attr/colorOnSurface"
+                android:alpha="0.7"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:layout_marginTop="2dp" />
+
+        </LinearLayout>
+
+        <!-- Category -->
+        <TextView
+            android:id="@+id/categoryText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.5"
+            tools:text="Electronics"
+            android:textSize="14sp"
+            android:textColor="?attr/colorOnSurface"
+            android:gravity="center"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:background="@drawable/category_badge"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            android:contentDescription="@string/category_cd" />
+
+        <!-- Quantity -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:minWidth="48dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/quantityText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/quantity_cd"
+                android:gravity="center"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                tools:text="1" />
+
+            <TextView
+                android:id="@+id/lowStockIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:background="@drawable/warning_badge"
+                android:contentDescription="@string/low_stock_indicator_cd"
+                android:paddingHorizontal="4dp"
+                android:paddingVertical="2dp"
+                android:text="@string/low_stock_label"
+                android:textColor="@color/warning_color"
+                android:textSize="4sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+        <!-- Price -->
+        <TextView
+            android:id="@+id/priceText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            tools:text="$29.99"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/success_color"
+            android:gravity="center"
+            android:contentDescription="@string/price_cd" />
+
+        <!-- Actions (Edit + Delete) -->
+        <LinearLayout
+            android:id="@+id/actionsContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:layout_marginStart="8dp">
+
+            <ImageButton
+                android:id="@+id/editButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
+                android:padding="8dp"
+                android:background="@drawable/circular_button_background"
+                app:srcCompat="@drawable/ic_my_edit"
+                app:tint="@android:color/white"
+                android:contentDescription="@string/edit_item_cd" />
+
+            <ImageButton
+                android:id="@+id/deleteButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:padding="8dp"
+                android:background="@drawable/circular_button_background"
+                app:srcCompat="@drawable/ic_my_delete"
+                app:tint="@android:color/white"
+                android:contentDescription="@string/delete_item_cd" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

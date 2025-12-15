@@ -15,21 +15,18 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 
 /**
  * InventoryAdapter
- * <p>
+ *
  * RecyclerView adapter for displaying {@link InventoryItem} rows.
- * <p>
+ *
  * Design highlights:
+ * - Uses stable IDs (DB id) for smoother animations & state retention.
  * - Uses DiffUtil to efficiently update the list (insert/move/change with animations).
  * - Supports partial binds via payloads (only rebinds changed fields).
  * - Exposes simple callbacks for edit/delete actions and optional data-change hooks
  *   to update empty states and counters in the hosting screen.
- * <p>
- * Firestore note:
- * - Identity is based on documentId (String) instead of a local DB integer id.
  */
 public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.InventoryViewHolder> {
 
@@ -67,7 +64,16 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
     public InventoryAdapter(List<InventoryItem> inventoryItems, OnItemClickListener listener) {
         this.inventoryItems = inventoryItems != null ? inventoryItems : new ArrayList<>();
         this.listener = listener;
-        // No stable IDs here; Firestore uses String documentIds and the list is driven by DiffUtil.
+
+        // Stable IDs enable RecyclerView to better track items across changes
+        // (keeps ripple/selection/animation continuity).
+        setHasStableIds(true);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        // Use DB id as the stable id (must be unique and not change for an item).
+        return inventoryItems.get(position).getId();
     }
 
     @NonNull
@@ -122,46 +128,33 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
 
             @Override
             public boolean areItemsTheSame(int oldPos, int newPos) {
-                InventoryItem o = oldList.get(oldPos);
-                InventoryItem n = newList.get(newPos);
-                String oldId = o.getDocumentId();
-                String newId = n.getDocumentId();
-
-                if (oldId == null || newId == null) {
-                    // Fallback: if both are null, fall back to object equality
-                    return o == n;
-                }
-                return oldId.equals(newId);
+                // Identity comparison: same DB id => same logical item
+                return oldList.get(oldPos).getId() == newList.get(newPos).getId();
             }
-
 
             @Override
             public boolean areContentsTheSame(int oldPos, int newPos) {
+                // Content equality used to decide if a rebind is needed
                 InventoryItem o = oldList.get(oldPos);
                 InventoryItem n = newList.get(newPos);
                 return eq(o.getName(), n.getName())
                         && eq(o.getDescription(), n.getDescription())
                         && eq(o.getCategory(), n.getCategory())
                         && o.getQuantity() == n.getQuantity()
-                        && Double.compare(o.getPrice(), n.getPrice()) == 0
-                        && o.isLowStock() == n.isLowStock();
+                        && Double.compare(o.getPrice(), n.getPrice()) == 0;
             }
 
             @Override
             public Object getChangePayload(int oldPos, int newPos) {
+                // Fine-grained changes: mark which fields changed for partial rebinds
                 InventoryItem o = oldList.get(oldPos);
                 InventoryItem n = newList.get(newPos);
                 Bundle p = new Bundle();
                 if (!eq(o.getName(), n.getName())) p.putBoolean("name", true);
                 if (!eq(o.getDescription(), n.getDescription())) p.putBoolean("desc", true);
                 if (!eq(o.getCategory(), n.getCategory())) p.putBoolean("cat", true);
-                if (o.getQuantity() != n.getQuantity()
-                        || o.isLowStock() != n.isLowStock()) {
-                    p.putBoolean("qty", true);
-                }
-                if (Double.compare(o.getPrice(), n.getPrice()) != 0) {
-                    p.putBoolean("price", true);
-                }
+                if (o.getQuantity() != n.getQuantity()) p.putBoolean("qty", true);
+                if (Double.compare(o.getPrice(), n.getPrice()) != 0) p.putBoolean("price", true);
                 return p.isEmpty() ? null : p;
             }
         });
@@ -178,48 +171,38 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
         updateItems(copy);
     }
 
-    /** Remove an item by Firestore documentId (no-op if id not found). */
-    public void removeByDocumentId(String documentId) {
-        if (documentId == null) return;
+    /** Remove an item by id (no-op if id not found). */
+    public void removeById(int id) {
         List<InventoryItem> copy = new ArrayList<>(inventoryItems);
         for (int i = 0; i < copy.size(); i++) {
-            String id = copy.get(i).getDocumentId();
-            if (documentId.equals(id)) {
-                copy.remove(i);
-                break;
-            }
+            if (copy.get(i).getId() == id) { copy.remove(i); break; }
         }
         updateItems(copy);
     }
 
     /**
-     * Replace an existing item with matching documentId; if not present, append it.
+     * Replace an existing item with matching id; if not present, append it.
      * Handy for upserts from dialogs or network responses.
      */
     public void replaceOrAdd(InventoryItem updated) {
-        String updatedId = updated.getDocumentId();
         List<InventoryItem> copy = new ArrayList<>(inventoryItems);
         boolean found = false;
-
-        if (updatedId != null) {
-            for (int i = 0; i < copy.size(); i++) {
-                String existingId = copy.get(i).getDocumentId();
-                if (updatedId.equals(existingId)) {
-                    copy.set(i, updated);
-                    found = true;
-                    break;
-                }
+        for (int i = 0; i < copy.size(); i++) {
+            if (copy.get(i).getId() == updated.getId()) {
+                copy.set(i, updated);
+                found = true;
+                break;
             }
         }
-
         if (!found) copy.add(updated);
         updateItems(copy);
     }
 
     // ---------- Helpers ----------
 
+    /** Null-safe equality helper for objects. */
     private static boolean eq(Object a, Object b) {
-        return Objects.equals(a, b);
+        return a == b || (a != null && a.equals(b));
     }
 
     /** Computes and emits aggregate list state to the optional dataChangedListener. */
@@ -227,15 +210,17 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
         if (dataChangedListener == null) return;
         int total = inventoryItems.size();
         int low = 0;
-        for (InventoryItem it : inventoryItems) {
-            if (it.isLowStock()) low++;
-        }
+        for (InventoryItem it : inventoryItems) if (it.isLowStock()) low++;
         dataChangedListener.onCountsChanged(total, low);
         dataChangedListener.onEmpty(total == 0);
     }
 
     // ---------- ViewHolder ----------
 
+    /**
+     * Binds a single row of inventory data.
+     * Provides full bind and partial bind paths to minimize view work.
+     */
     static class InventoryViewHolder extends RecyclerView.ViewHolder {
         private final TextView itemNameText;
         private final TextView itemDescriptionText;
@@ -258,17 +243,21 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
             deleteButton        = itemView.findViewById(R.id.deleteButton);
         }
 
+        /** Full bind for an item (used on initial bind or when payloads are empty). */
         void bind(InventoryItem item, OnItemClickListener listener) {
             itemNameText.setText(item.getName());
             itemDescriptionText.setText(item.getDescription());
             categoryText.setText(item.getCategory());
             quantityText.setText(String.valueOf(item.getQuantity()));
 
+            // Use a consistent currency format (US here; or Locale.getDefault() for device locale)
             NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.US);
             priceText.setText(currencyFormat.format(item.getPrice()));
 
+            // Low-stock banner/label visibility
             lowStockIndicator.setVisibility(item.isLowStock() ? View.VISIBLE : View.GONE);
 
+            // Click wires (guard against NO_POSITION)
             editButton.setOnClickListener(v -> {
                 if (listener != null) {
                     int pos = getAdapterPosition();
@@ -289,18 +278,16 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.Inve
             });
         }
 
+        /**
+         * Partial bind path that only updates fields flagged in the payload.
+         * Keeps UI snappy on frequent updates (e.g., quantities changing).
+         */
         void bindPartial(InventoryItem item, Bundle payload) {
             NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.US);
 
-            if (payload.getBoolean("name",  false)) {
-                itemNameText.setText(item.getName());
-            }
-            if (payload.getBoolean("desc",  false)) {
-                itemDescriptionText.setText(item.getDescription());
-            }
-            if (payload.getBoolean("cat",   false)) {
-                categoryText.setText(item.getCategory());
-            }
+            if (payload.getBoolean("name",  false)) itemNameText.setText(item.getName());
+            if (payload.getBoolean("desc",  false)) itemDescriptionText.setText(item.getDescription());
+            if (payload.getBoolean("cat",   false)) categoryText.setText(item.getCategory());
             if (payload.getBoolean("qty",   false)) {
                 quantityText.setText(String.valueOf(item.getQuantity()));
                 lowStockIndicator.setVisibility(item.isLowStock() ? View.VISIBLE : View.GONE);

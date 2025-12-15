@@ -7,12 +7,10 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="8dp"
-    android:layout_marginTop="2dp"
     android:layout_marginBottom="8dp"
     app:cardCornerRadius="8dp"
     app:cardElevation="2dp"
-    app:cardBackgroundColor="?attr/colorSurface">
+    app:cardBackgroundColor="@android:color/white">
 
     <LinearLayout
         android:id="@+id/rowRoot"
@@ -22,7 +20,7 @@
         android:paddingVertical="16dp"
         android:paddingHorizontal="16dp"
         android:gravity="center_vertical"
-        android:foreground="?android:attr/selectableItemBackground"
+        android:foreground="?attr/selectableItemBackground"
         android:clickable="true"
         android:focusable="true">
 
@@ -40,7 +38,7 @@
                 tools:text="Sample Item"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="?attr/colorOnSurface"
+                android:textColor="@color/text_primary"
                 android:maxLines="1"
                 android:ellipsize="end"
                 android:importantForAccessibility="yes" />
@@ -51,8 +49,7 @@
                 android:layout_height="wrap_content"
                 tools:text="Item description"
                 android:textSize="12sp"
-                android:textColor="?attr/colorOnSurface"
-                android:alpha="0.7"
+                android:textColor="@color/text_secondary"
                 android:maxLines="1"
                 android:ellipsize="end"
                 android:layout_marginTop="2dp" />
@@ -67,18 +64,18 @@
             android:layout_weight="1.5"
             tools:text="Electronics"
             android:textSize="14sp"
-            android:textColor="?attr/colorOnSurface"
+            android:textColor="@color/text_primary"
             android:gravity="center"
             android:maxLines="1"
             android:ellipsize="end"
             android:background="@drawable/category_badge"
             android:paddingHorizontal="8dp"
             android:paddingVertical="4dp"
-            android:contentDescription="@string/category_cd" />
+            android:contentDescription="Category" />
 
         <!-- Quantity -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="1dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
@@ -89,12 +86,12 @@
                 android:id="@+id/quantityText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:contentDescription="@string/quantity_cd"
+                android:contentDescription="Quantity"
                 android:gravity="center"
-                android:textColor="?attr/colorOnSurface"
+                android:textColor="@color/text_primary"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                tools:text="1" />
+                tools:text="25" />
 
             <TextView
                 android:id="@+id/lowStockIndicator"
@@ -102,12 +99,12 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:background="@drawable/warning_badge"
-                android:contentDescription="@string/low_stock_indicator_cd"
-                android:paddingHorizontal="4dp"
+                android:contentDescription="Low stock indicator"
+                android:paddingHorizontal="6dp"
                 android:paddingVertical="2dp"
-                android:text="@string/low_stock_label"
+                android:text="Low Stock"
                 android:textColor="@color/warning_color"
-                android:textSize="4sp"
+                android:textSize="10sp"
                 android:textStyle="bold"
                 android:visibility="gone" />
 
@@ -124,7 +121,7 @@
             android:textStyle="bold"
             android:textColor="@color/success_color"
             android:gravity="center"
-            android:contentDescription="@string/price_cd" />
+            android:contentDescription="Price" />
 
         <!-- Actions (Edit + Delete) -->
         <LinearLayout
@@ -135,28 +132,30 @@
             android:orientation="horizontal"
             android:layout_marginStart="8dp">
 
-            <ImageButton
-                android:id="@+id/editButton"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginEnd="8dp"
-                android:padding="8dp"
-                android:background="@drawable/circular_button_background"
-                app:srcCompat="@drawable/ic_my_edit"
-                app:tint="@android:color/white"
-                android:contentDescription="@string/edit_item_cd" />
+        <ImageButton
+            android:id="@+id/editButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="8dp"
+            android:padding="8dp"
+            android:background="@drawable/circular_button_background"
+            app:srcCompat="@drawable/ic_my_edit"
+            app:tint="@android:color/white"
+            android:contentDescription="Edit item" />
 
-            <ImageButton
-                android:id="@+id/deleteButton"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:padding="8dp"
-                android:background="@drawable/circular_button_background"
-                app:srcCompat="@drawable/ic_my_delete"
-                app:tint="@android:color/white"
-                android:contentDescription="@string/delete_item_cd" />
-        </LinearLayout>
-
+        <ImageButton
+            android:id="@+id/deleteButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:background="@drawable/circular_button_background"
+            app:srcCompat="@drawable/ic_my_delete"
+            app:tint="@android:color/white"
+            android:contentDescription="Delete item" />
     </LinearLayout>
+
+
+
+</LinearLayout>
 
 </androidx.cardview.widget.CardView>

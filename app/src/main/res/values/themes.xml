@@ -1,32 +1,15 @@
+<!-- res/values/themes.xml -->
 <resources>
+    <style name="Theme.SmartInventory" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Make status bar transparent so the toolbar blends under it -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <!-- (optional) also make nav bar transparent if you like -->
+        <item name="android:navigationBarColor">@android:color/transparent</item>
 
-    <style name="Theme.SmartInventory" parent="Theme.Material3.Light.NoActionBar">
-
-        <!-- Primary -->
-        <item name="colorPrimary">@color/primary_color</item>
-        <item name="colorOnPrimary">@color/on_primary</item>
-
-        <!-- Secondary -->
-        <item name="colorSecondary">@color/secondary_color</item>
-        <item name="colorOnSecondary">@color/on_secondary</item>
-
-        <!-- Background -->
-        <!-- Must be "android:colorBackground" because M3 uses system background -->
-        <item name="android:colorBackground">@color/background_color</item>
-        <item name="colorOnBackground">@color/on_background</item>
-
-        <!-- Surfaces -->
-        <item name="colorSurface">@color/surface_color</item>
-        <item name="colorOnSurface">@color/on_surface</item>
-        <item name="colorSurfaceVariant">@color/surface_variant</item>
-        <item name="colorOutline">@color/outline_color</item>
-
-        <!-- System bars -->
-        <item name="android:statusBarColor">@color/primary_color</item>
-        <item name="android:navigationBarColor">@color/primary_color</item>
+        <!-- If your app bar is dark, keep LIGHT icons on the status bar -->
         <item name="android:windowLightStatusBar">false</item>
+        <!-- If your nav bar background is dark, keep LIGHT nav icons -->
         <item name="android:windowLightNavigationBar">false</item>
 
     </style>
-
 </resources>

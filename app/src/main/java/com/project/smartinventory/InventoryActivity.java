@@ -1,17 +1,11 @@
 package com.project.smartinventory;
 
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.widget.Spinner;
-import android.widget.CheckBox;
-import android.widget.ArrayAdapter;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -21,38 +15,30 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.color.MaterialColors;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.project.smartinventory.viewmodel.InventoryViewModel;
 import com.project.smartinventory.viewmodel.LoginViewModel;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Locale;
 
 /**
- * Manages the main inventory screen.
+ * InventoryActivity
  *
- * <p>This activity is the central hub for viewing and managing inventory items.
- * It displays a list of items using a {@link RecyclerView}, provides summary counts
- * (total items, low stock items), and includes functionality for searching and filtering the list.
+ * Displays the inventory list, summary counts, and provides CRUD affordances
+ * (add/edit/delete) via a dialog. Also hosts top-app-bar actions (notifications,
+ * settings, logout) through a menu.
  *
- * <p><b>Key Responsibilities:</b>
- * <ul>
- *     <li>Observes {@link InventoryViewModel} to display the list of inventory items and summary data.</li>
- *     <li>Handles user interactions for adding new items (via a floating action button that launches
- *         {@link EditItemActivity}), and editing or deleting existing items through the list adapter.</li>
- *     <li>Provides search functionality to filter items by name.</li>
- *     <li>Offers a filter dialog to narrow down the list by category or low stock status.</li>
- *     <li>Manages the top app bar, which includes actions for navigation (e.g., to {@link NotificationActivity})
- *         and user session management (logout).</li>
- * </ul>
+ * Responsibilities:
+ *  - Initialize RecyclerView + adapter and observe {@link InventoryViewModel} for data.
+ *  - Show “Add/Edit item” dialog and persist changes through the ViewModel.
+ *  - Handle top app bar actions (navigate to NotificationActivity, confirm logout, etc.).
  *
- * @see InventoryViewModel
- * @see InventoryAdapter
- * @see EditItemActivity
+ * Notes:
+ *  - Edge-to-edge is intentionally disabled here for simplicity and predictable layout.
+ *  - All user-facing strings should live in strings.xml (marked below with TODO).
  */
 public class InventoryActivity extends AppCompatActivity {
 
@@ -65,26 +51,15 @@ public class InventoryActivity extends AppCompatActivity {
     private FloatingActionButton fab;
     private InventoryAdapter adapter;
 
-    // ---- Filter ----
-    private List<String> currentCategories = new ArrayList<>();
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Simpler, non edge-to-edge layout to avoid inset handling
         setContentView(R.layout.activity_inventory);
 
         // ---- Toolbar ----
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        int colorOnPrimary = MaterialColors.getColor(toolbar,
-                com.google.android.material.R.attr.colorOnPrimary
-        );
-
-        Drawable overflow = toolbar.getOverflowIcon();
-        if (overflow != null) {
-            overflow.setTint(colorOnPrimary);
-        }
 
         // ---- Recycler + FAB ----
         recyclerView = findViewById(R.id.recyclerView);
@@ -94,28 +69,11 @@ public class InventoryActivity extends AppCompatActivity {
         viewModel = new ViewModelProvider(this).get(InventoryViewModel.class);
         loginViewModel = new ViewModelProvider(this).get(LoginViewModel.class);
 
-        viewModel.categories.observe(this, cats -> {
-            currentCategories = (cats != null) ? cats : new ArrayList<>();
-        });
-
         // Adapter with row-level actions
         adapter = new InventoryAdapter(new ArrayList<>(), new InventoryAdapter.OnItemClickListener() {
-            @Override
-            public void onEditClick(InventoryItem item, int position) {
-                Intent intent = new Intent(InventoryActivity.this, EditItemActivity.class);
-                intent.putExtra(EditItemActivity.EXTRA_ITEM, item);
-                startActivity(intent);
-            }
-
-            @Override
-            public void onDeleteClick(InventoryItem item, int position) {
-                String docId = item.getDocumentId();
-                if (docId != null && !docId.trim().isEmpty()) {
-                    viewModel.delete(docId);
-                }
-            }
+            @Override public void onEditClick(InventoryItem item, int position) { showEditDialog(item); }
+            @Override public void onDeleteClick(InventoryItem item, int position) { viewModel.delete(item.getId()); }
         });
-
 
         recyclerView.setLayoutManager(new GridLayoutManager(this, 1));
         recyclerView.setAdapter(adapter);
@@ -126,53 +84,19 @@ public class InventoryActivity extends AppCompatActivity {
 
         // Observe data -> update list
         viewModel.items.observe(this, items -> adapter.updateItems(items));
-
         // Observe counters -> update summary UI
         viewModel.totalCount.observe(this, n -> totalItemsCount.setText(String.valueOf(n)));
         viewModel.lowStockCount.observe(this, n -> lowStockCount.setText(String.valueOf(n)));
 
-        // Add and edit items
-        fab.setOnClickListener(v -> {
-            Intent intent = new Intent(this, EditItemActivity.class);
-            startActivity(intent);
-        });
-
-
-        // ---- Search ----
-        TextInputEditText searchEditText = findViewById(R.id.searchEditText);
-        searchEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                // no-op
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                viewModel.setSearchQuery(s != null ? s.toString() : "");
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                // no-op
-            }
-        });
-
-        // ---- Filter ----
-        MaterialButton filterButton = findViewById(R.id.filterButton);
-        filterButton.setOnClickListener(v -> showFilterDialog());
-    }
-
-    // refresh inventory list on resume to display update after add or edit
-    @Override
-    protected void onResume() {
-        super.onResume();
-        viewModel.refresh();
+        // Add new item
+        fab.setOnClickListener(v -> showAddDialog());
     }
 
     // ---- App Bar Menu ----
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        // NOTE: ensure this file name matches your res/menu XML (menu file is "inventory_menu.xml" here)
         getMenuInflater().inflate(R.menu.inventory_menu, menu);
         return true;
     }
@@ -186,19 +110,22 @@ public class InventoryActivity extends AppCompatActivity {
             return true;
 
         } else if (id == R.id.action_settings) {
-            // Placeholder for future SettingsActivity
+            // TODO strings.xml: screen title
+            // TODO: If/when you add a SettingsActivity, start it here.
+            // startActivity(new Intent(this, SettingsActivity.class));
             return true;
 
         } else if (id == R.id.action_logout) {
+            // Confirm before clearing auth and returning to login
             new AlertDialog.Builder(this)
-                    .setTitle("Logout")  // TODO move to strings.xml
-                    .setMessage("Are you sure you want to log out?")
-                    .setPositiveButton("Logout", (d, w) -> {
+                    .setTitle("Logout")  // TODO strings.xml
+                    .setMessage("Are you sure you want to log out?") // TODO strings.xml
+                    .setPositiveButton("Logout", (d, w) -> {          // TODO strings.xml
                         loginViewModel.logout();
                         startActivity(new Intent(this, LoginActivity.class));
                         finish();
                     })
-                    .setNegativeButton("Cancel", null)
+                    .setNegativeButton("Cancel", null) // TODO strings.xml
                     .show();
             return true;
         }
@@ -208,78 +135,85 @@ public class InventoryActivity extends AppCompatActivity {
 
     // ---- Dialogs ----
 
+    /** Convenience wrapper for Add flow. */
+    private void showAddDialog() {
+        showEditOrAddDialog(null);
+    }
+
+    /** Convenience wrapper for Edit flow. */
+    private void showEditDialog(InventoryItem item) {
+        showEditOrAddDialog(item);
+    }
 
     /**
-     * Displays a dialog for filtering the inventory list.
-     *
-     * <p>The dialog allows users to filter by a specific category and/or show only items
-     * that are low in stock. The category spinner is populated with all unique categories
-     * currently present in the inventory, plus an "All categories" option.
-     *
-     * <ul>
-     *   <li><b>Apply:</b> Applies the selected category and low stock filters to the list by
-     *       updating the {@link InventoryViewModel}.</li>
-     *   <li><b>Clear:</b> Resets all filters, showing all items.</li>
-     *   <li><b>Cancel:</b> Closes the dialog without changing the current filters.</li>
-     * </ul>
+     * Builds and shows the Add/Edit dialog. If {@code existing} is null, this acts as “Add”.
+     * Otherwise, fields are pre-populated and “Save” updates the existing item.
      */
-    private void showFilterDialog() {
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_filter, null);
+    private void showEditOrAddDialog(InventoryItem existing) {
+        final View dialog = getLayoutInflater().inflate(R.layout.dialog_item, null);
 
-        Spinner categorySpinner   = dialogView.findViewById(R.id.categorySpinner);
-        CheckBox lowStockCheckBox = dialogView.findViewById(R.id.lowStockCheckBox);
+        final TextInputEditText name  = dialog.findViewById(R.id.inputName);
+        final TextInputEditText desc  = dialog.findViewById(R.id.inputDesc);
+        final TextInputEditText cat   = dialog.findViewById(R.id.inputCategory);
+        final TextInputEditText qty   = dialog.findViewById(R.id.inputQuantity);
+        final TextInputEditText price = dialog.findViewById(R.id.inputPrice);
 
-        List<String> options = new ArrayList<>();
-        options.add("All categories");
-        options.addAll(currentCategories);
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                options
-        );
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        categorySpinner.setAdapter(adapter);
-
-        // Preselect current filters from ViewModel
-        String currentCat = viewModel.getCurrentCategoryFilter();
-        AtomicBoolean onlyLow   = new AtomicBoolean(viewModel.isOnlyLowStockFilterEnabled());
-
-        // Default to "All categories"
-        int selectionIndex = 0;
-
-        if (currentCat != null) {
-            // options[0] = "All categories", real categories start at index 1
-            for (int i = 1; i < options.size(); i++) {
-                if (options.get(i) != null &&
-                        options.get(i).equalsIgnoreCase(currentCat)) {
-                    selectionIndex = i;
-                    break;
-                }
-            }
+        // Pre-fill for edit
+        if (existing != null) {
+            name.setText(existing.getName());
+            desc.setText(existing.getDescription());
+            cat.setText(existing.getCategory());
+            qty.setText(String.valueOf(existing.getQuantity()));
+            // Display price using a readable number format; parsing will normalize it
+            price.setText(NumberFormat.getNumberInstance(Locale.US).format(existing.getPrice()));
         }
 
-        categorySpinner.setSelection(selectionIndex);
-        lowStockCheckBox.setChecked(onlyLow.get());
-
         new AlertDialog.Builder(this)
-                .setView(dialogView)
-                .setPositiveButton("Apply", (d, w) -> {
-                    String selected = (String) categorySpinner.getSelectedItem();
-                    onlyLow.set(lowStockCheckBox.isChecked());
+                .setTitle(existing == null ? "Add Item" : "Edit Item") // TODO strings.xml
+                .setView(dialog)
+                .setPositiveButton(existing == null ? "Add" : "Save", (d, w) -> { // TODO strings.xml
+                    // Extract and normalize inputs
+                    final String n  = String.valueOf(name.getText()).trim();
+                    final String de = String.valueOf(desc.getText()).trim();
+                    final String ca = String.valueOf(cat.getText()).trim();
+                    final int q     = parseIntSafe(String.valueOf(qty.getText()).trim());
+                    final double pr = parseDoubleSafe(String.valueOf(price.getText()).trim());
 
-                    if ("All categories".equals(selected)) {
-                        viewModel.setCategoryFilter(null);
+                    if (existing == null) {
+                        // New item (id=0; real id assigned by DB/repo)
+                        InventoryItem it = new InventoryItem(0, n, de, ca, q, pr);
+                        viewModel.add(it);
                     } else {
-                        viewModel.setCategoryFilter(selected);
+                        // Update existing
+                        existing.setName(n);
+                        existing.setDescription(de);
+                        existing.setCategory(ca);
+                        existing.setQuantity(q);
+                        existing.setPrice(pr);
+                        viewModel.update(existing);
                     }
-                    viewModel.setOnlyLowStock(onlyLow.get());
                 })
-                .setNeutralButton("Clear", (d, w) -> {
-                    viewModel.setCategoryFilter(null);
-                    viewModel.setOnlyLowStock(false);
-                })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton("Cancel", null) // TODO strings.xml
                 .show();
+    }
+
+    // ---- Parsing helpers ----
+
+    /** Parses an int from a possibly formatted string (commas allowed). Returns def on failure. */
+    private int parseIntSafe(String s) {
+        try {
+            return Integer.parseInt(s.replaceAll(",", ""));
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    /** Parses a double from a possibly formatted string (commas allowed). Returns def on failure. */
+    private double parseDoubleSafe(String s) {
+        try {
+            return Double.parseDouble(s.replaceAll(",", ""));
+        } catch (Exception e) {
+            return 0.0;
+        }
     }
 }

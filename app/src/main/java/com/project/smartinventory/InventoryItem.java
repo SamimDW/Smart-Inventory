@@ -1,140 +1,101 @@
 package com.project.smartinventory;
 
-import com.google.firebase.firestore.Exclude;
+import java.io.Serializable;
 
-/// InventoryItem
-/// Data model for an inventory entry used with Firestore.
-/// Identity:
-///  - documentId: Firestore document ID (not a local SQL primary key).
-/// Fields:
-///  - name:        Human-readable name of the item.
-///  - description: Basic description or notes about the item.
-///  - category:    Logical grouping (e.g., "Electronics", "Clothing").
-///  - quantity:    Number of units currently in stock.
-///  - price:       Cost per unit.
-/// Utility:
-///  - [#isLowStock()] flags items at or below a simple stock threshold.
-public class InventoryItem implements java.io.Serializable {
-
-    // ---- Identity ----
-    @Exclude
-    private String documentId;   // Firestore doc ID
+/**
+ * InventoryItem
+ *
+ * A simple data model representing an item in the inventory.
+ * This class is {@link Serializable}, making it suitable for passing
+ * between Android components (e.g., via Intents or Bundles).
+ *
+ * Fields:
+ *  - id:        Unique identifier for the item (typically database primary key).
+ *  - name:      Human-readable name of the item.
+ *  - description: Detailed explanation or notes about the item.
+ *  - category:  Logical grouping (e.g., "Electronics", "Clothing").
+ *  - quantity:  Number of units currently in stock.
+ *  - price:     Cost per unit.
+ *
+ * Utility:
+ *  - Includes {@link #isLowStock()} to flag items below a stock threshold.
+ */
+public class InventoryItem implements Serializable {
 
     // ---- Fields ----
+    private int id;
     private String name;
     private String description;
     private String category;
     private int quantity;
     private double price;
-    private int lowStockThreshold;
 
     // ---- Constructors ----
 
-    /**
-     * No-arg constructor required for Firestore toObject().
-     */
-    public InventoryItem() {
-    }
+    /** Default no-arg constructor (needed for frameworks like Firebase, Room, etc.) */
+    public InventoryItem() {}
 
-    public InventoryItem(String documentId,
-                         String name,
-                         String description,
-                         String category,
-                         int quantity,
-                         double price,
-                         int lowStockThreshold) {
-        this.documentId = documentId;
+    /**
+     * Full constructor to quickly create an item.
+     *
+     * @param id          unique identifier
+     * @param name        item name
+     * @param description item description
+     * @param category    category grouping
+     * @param quantity    stock level
+     * @param price       unit price
+     */
+    public InventoryItem(int id, String name, String description,
+                         String category, int quantity, double price) {
+        this.id = id;
         this.name = name;
         this.description = description;
         this.category = category;
         this.quantity = quantity;
         this.price = price;
-        this.lowStockThreshold = lowStockThreshold;
     }
 
-    // ---- Identity accessors ----
+    // ---- Getters / Setters ----
+
+    /** @return unique identifier */
+    public int getId() { return id; }
+    /** @param id unique identifier */
+    public void setId(int id) { this.id = id; }
+
+    /** @return item name */
+    public String getName() { return name; }
+    /** @param name item name */
+    public void setName(String name) { this.name = name; }
+
+    /** @return item description */
+    public String getDescription() { return description; }
+    /** @param description detailed description */
+    public void setDescription(String description) { this.description = description; }
+
+    /** @return category */
+    public String getCategory() { return category; }
+    /** @param category logical grouping (e.g., Electronics) */
+    public void setCategory(String category) { this.category = category; }
+
+    /** @return stock quantity */
+    public int getQuantity() { return quantity; }
+    /** @param quantity stock quantity */
+    public void setQuantity(int quantity) { this.quantity = quantity; }
+
+    /** @return unit price */
+    public double getPrice() { return price; }
+    /** @param price cost per unit */
+    public void setPrice(double price) { this.price = price; }
+
+    // ---- Utility Methods ----
 
     /**
-     * Firestore document ID.
+     * Determines if this item is considered "low stock".
+     *
+     * @return true if quantity is less than or equal to 5, otherwise false
+     * (threshold can be adjusted as needed).
      */
-    @Exclude
-    public String getDocumentId() {
-        return documentId;
-    }
-
-    @Exclude
-    public void setDocumentId(String documentId) {
-        this.documentId = documentId;
-    }
-
-    /**
-     * Backward-compatible alias for old code that used getId()/setId().
-     * Prefer getDocumentId()/setDocumentId() in new code.
-     */
-    @Exclude
-    public String getId() {
-        return documentId;
-    }
-
-    @Exclude
-    public void setId(String id) {
-        this.documentId = id;
-    }
-
-    // ---- Field accessors ----
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    // ---- Utility ----
-
-    public int getLowStockThreshold() {
-        return lowStockThreshold;
-    }
-
-    public void setLowStockThreshold(int lowStockThreshold) {
-        this.lowStockThreshold = lowStockThreshold;
-    }
-
     public boolean isLowStock() {
-        int threshold = lowStockThreshold > 0 ? lowStockThreshold : 5; // fallback
-        return quantity <= threshold;
+        return quantity <= 5;
     }
 }

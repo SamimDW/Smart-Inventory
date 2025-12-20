@@ -108,6 +108,8 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Password Input -->
+
+            <!-- Login Button -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/passwordInputLayout"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -122,8 +124,11 @@
                 app:boxStrokeColor="@color/outline_color"
                 app:endIconMode="password_toggle"
                 app:endIconTint="@color/icon_tint"
-                app:startIconTint="@color/icon_tint"
-                app:hintTextColor="@color/outline_color">
+                app:helperText="@string/password_rules_helper"
+                app:helperTextEnabled="true"
+                app:errorEnabled="true"
+                app:hintTextColor="@color/outline_color"
+                app:startIconTint="@color/icon_tint">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/passwordEditText"
@@ -136,7 +141,6 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Login Button -->
             <LinearLayout
                 android:id="@+id/loginButtonContainer"
                 android:layout_width="match_parent"

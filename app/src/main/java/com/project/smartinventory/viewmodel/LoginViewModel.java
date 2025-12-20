@@ -30,6 +30,10 @@ public class LoginViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> _isLoading = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> _isSuccess = new MutableLiveData<>(false);
     private final MutableLiveData<String>  _error     = new MutableLiveData<>(null);
+    public final MutableLiveData<String> emailFieldError = new MutableLiveData<>(null);
+    public final MutableLiveData<String> passwordFieldError = new MutableLiveData<>(null);
+    public final MutableLiveData<String> usernameFieldError = new MutableLiveData<>(null);
+
 
     public final LiveData<Boolean> isLoading = _isLoading;
     public final LiveData<Boolean> isSuccess = _isSuccess;
@@ -55,10 +59,16 @@ public class LoginViewModel extends AndroidViewModel {
     @MainThread
     public void login(String email, String password) {
         _error.setValue(null);
+        emailFieldError.setValue(null);
+        passwordFieldError.setValue(null);
 
-        // Invalid if email is bad OR password is bad
-        if (!isValidEmail(email) || !isValidPassword(password)) {
-            _error.setValue("LOGIN_FAILED");
+        if (!isValidEmail(email)) {
+            emailFieldError.setValue("Enter a valid email");
+            return;
+        }
+
+        if (password == null || password.isEmpty()) {
+            passwordFieldError.setValue("Password is required");
             return;
         }
 
@@ -85,10 +95,23 @@ public class LoginViewModel extends AndroidViewModel {
     @MainThread
     public void register(String username, String email, String password) {
         _error.setValue(null);
+        usernameFieldError.setValue(null);
+        emailFieldError.setValue(null);
+        passwordFieldError.setValue(null);
 
-        // Invalid if username is empty OR email invalid OR password invalid
-        if (!isValidDisplayUsername(username) || !isValidEmail(email) || !isValidPassword(password)) {
-            _error.setValue("REGISTER_FAILED");
+        if (!isValidDisplayUsername(username)) {
+            usernameFieldError.setValue("Use 3–20 chars: letters, numbers, _ or -");
+            return;
+        }
+
+        if (!isValidEmail(email)) {
+            emailFieldError.setValue("Enter a valid email");
+            return;
+        }
+
+        String pwErr = passwordRuleError(password);
+        if (pwErr != null) {
+            passwordFieldError.setValue(pwErr);
             return;
         }
 
@@ -109,6 +132,23 @@ public class LoginViewModel extends AndroidViewModel {
             }
         });
     }
+
+    //
+    private String passwordRuleError(String password) {
+        if (password == null || password.isEmpty()) return "Password is required";
+        if (password.length() < 8) return "Use at least 8 characters";
+
+        boolean hasLetter  = password.matches(".*[A-Za-z].*");
+        boolean hasNumber  = password.matches(".*\\d.*");
+        boolean hasSpecial = password.matches(".*[!@#$%^&*].*");
+
+        if (!hasLetter)  return "Add at least 1 letter";
+        if (!hasNumber)  return "Add at least 1 number";
+        if (!hasSpecial) return "Add 1 special: !@#$%^&*";
+
+        return null;
+    }
+
 
     public void clearError() {
         _error.setValue(null);
@@ -141,6 +181,6 @@ public class LoginViewModel extends AndroidViewModel {
     private boolean isValidPassword(String password) {
         if (password == null) return false;
         if (password.isEmpty()) return false;
-        return password.length() >= 6;
+        return password.length() >= 8;
     }
 }

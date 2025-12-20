@@ -88,6 +88,7 @@
     <string name="err_login_failed">Login failed. Please try again.</string>
     <string name="err_register_failed">Could not create account. Please try again.</string>
     <string name="err_email_in_use">That email is already registered.</string>
+    <string name="password_rules_helper">8+ characters, include a letter, a number, and one of: !@#$%^*</string>
     <string name="or">or</string>
 
     <!-- Hints / labels -->

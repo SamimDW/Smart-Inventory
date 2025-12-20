@@ -16,6 +16,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputLayout;
+import com.project.smartinventory.util.SimpleTextWatcher;
 import com.project.smartinventory.viewmodel.LoginViewModel;
 
 public class LoginActivity extends AppCompatActivity {
@@ -26,6 +27,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText emailEditText;
     private EditText passwordEditText;
     private TextInputLayout usernameInputLayout;
+    private TextInputLayout passwordInputLayout;
     private TextView forgotPasswordText;
 
     private MaterialButton loginButton;
@@ -48,6 +50,12 @@ public class LoginActivity extends AppCompatActivity {
         // Change action buttons
         registerButton.setText(R.string.register_button_confirm_text);
         forgotPasswordText.setText(R.string.cancel_registration);
+
+        passwordInputLayout.setHelperText(getString(R.string.password_rules_helper));
+        passwordInputLayout.setHelperTextEnabled(true);
+        passwordInputLayout.setHelperText(
+                getString(R.string.password_rules_helper)
+        );
     }
 
     private void exitRegisterMode() {
@@ -69,6 +77,12 @@ public class LoginActivity extends AppCompatActivity {
         // Reset texts
         registerButton.setText(R.string.sign_up);
         forgotPasswordText.setText(R.string.forgot_password);
+
+        passwordInputLayout.setHelperText(null);
+        passwordInputLayout.setHelperTextEnabled(false);
+
+        // Clear errors
+        passwordInputLayout.setError(null);
     }
 
     @Override
@@ -84,6 +98,10 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         // ----- Bind views -----
+        usernameInputLayout = findViewById(R.id.usernameInputLayout);
+        TextInputLayout emailInputLayout = findViewById(R.id.emailInputLayout);
+        passwordInputLayout = findViewById(R.id.passwordInputLayout);
+
         loginButtonContainer = findViewById(R.id.loginButtonContainer);
         dividerContainer     = findViewById(R.id.dividerContainer);
 
@@ -96,6 +114,20 @@ public class LoginActivity extends AppCompatActivity {
 
         loginButton    = findViewById(R.id.loginButton);
         registerButton = findViewById(R.id.registerButton);
+
+        // Clear LiveData errors on text change
+        emailEditText.addTextChangedListener(new SimpleTextWatcher(() ->
+                emailInputLayout.setError(null)));
+
+        passwordEditText.addTextChangedListener(new SimpleTextWatcher(() ->
+                passwordInputLayout.setError(null)));
+
+        usernameEditText.addTextChangedListener(new SimpleTextWatcher(() ->
+                usernameInputLayout.setError(null)));
+
+        // set helper text to null on login screen for a cleaner look
+        passwordInputLayout.setHelperText(null);
+        passwordInputLayout.setHelperTextEnabled(false);
 
 
         // ----- Initial state -----
@@ -123,6 +155,10 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+        viewModel.usernameFieldError.observe(this, usernameInputLayout::setError);
+        viewModel.emailFieldError.observe(this, emailInputLayout::setError);
+        viewModel.passwordFieldError.observe(this, passwordInputLayout::setError);
+
         viewModel.error.observe(this, code -> {
             if (code == null || code.trim().isEmpty()) return;
 
@@ -143,7 +179,7 @@ public class LoginActivity extends AppCompatActivity {
         // LOGIN: email + password
         loginButton.setOnClickListener(v -> {
             String email = emailEditText.getText().toString().trim();
-            String password = passwordEditText.getText().toString().trim();
+            String password = passwordEditText.getText().toString();
             viewModel.login(email, password);
         });
 

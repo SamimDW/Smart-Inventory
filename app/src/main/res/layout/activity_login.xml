@@ -88,7 +88,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:textColorHint="@color/icon_tint"
-                android:visibility="gone"
                 app:boxCornerRadiusBottomEnd="12dp"
                 app:boxCornerRadiusBottomStart="12dp"
                 app:boxCornerRadiusTopEnd="12dp"

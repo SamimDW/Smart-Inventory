@@ -25,8 +25,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText usernameEditText;
     private EditText emailEditText;
     private EditText passwordEditText;
-
-    private TextInputLayout emailInputLayout;
+    private TextInputLayout usernameInputLayout;
     private TextView forgotPasswordText;
 
     private MaterialButton loginButton;
@@ -39,8 +38,8 @@ public class LoginActivity extends AppCompatActivity {
     private void enterRegisterMode() {
         isRegisterMode = true;
 
-        // Show email input layout
-        emailInputLayout.setVisibility(View.VISIBLE);
+        // Show username input layout
+        usernameInputLayout.setVisibility(View.VISIBLE);
 
         // Hide login-only UI
         loginButtonContainer.setVisibility(View.GONE);
@@ -54,13 +53,18 @@ public class LoginActivity extends AppCompatActivity {
     private void exitRegisterMode() {
         isRegisterMode = false;
 
-        // Hide email input layout and clear email field
-        emailInputLayout.setVisibility(View.GONE);
-        emailEditText.setText("");
+        // Hide username input layout
+        usernameInputLayout.setVisibility(View.GONE);
+
 
         // Show login UI again
         loginButtonContainer.setVisibility(View.VISIBLE);
         dividerContainer.setVisibility(View.VISIBLE);
+
+        // Clear email and password fields
+        usernameEditText.setText("");
+        emailEditText.setText("");
+        passwordEditText.setText("");
 
         // Reset texts
         registerButton.setText(R.string.sign_up);
@@ -87,7 +91,7 @@ public class LoginActivity extends AppCompatActivity {
         emailEditText    = findViewById(R.id.emailEditText);
         passwordEditText = findViewById(R.id.passwordEditText);
 
-        emailInputLayout   = findViewById(R.id.emailInputLayout);
+        usernameInputLayout   = findViewById(R.id.usernameInputLayout);
         forgotPasswordText = findViewById(R.id.forgotPasswordText);
 
         loginButton    = findViewById(R.id.loginButton);
@@ -96,8 +100,8 @@ public class LoginActivity extends AppCompatActivity {
 
         // ----- Initial state -----
 
-        // Hide email input layout
-        emailInputLayout.setVisibility(View.GONE);
+        // Hide username input layout
+        usernameInputLayout.setVisibility(View.GONE);
         isRegisterMode = false;
 
         // ----- ViewModel -----
@@ -123,8 +127,6 @@ public class LoginActivity extends AppCompatActivity {
             if (code == null || code.trim().isEmpty()) return;
 
             String message = switch (code) {
-                case "USER_NOT_FOUND"  -> getString(R.string.err_user_not_found);
-                case "USERNAME_TAKEN"  -> getString(R.string.err_username_taken);
                 case "EMAIL_IN_USE"    -> getString(R.string.err_email_in_use);
                 case "WRONG_PASSWORD"  -> getString(R.string.err_wrong_password);
                 case "LOGIN_FAILED"    -> getString(R.string.err_login_failed);
@@ -138,11 +140,11 @@ public class LoginActivity extends AppCompatActivity {
 
         // ----- Events -----
 
-        // LOGIN: username + password
+        // LOGIN: email + password
         loginButton.setOnClickListener(v -> {
-            String username = usernameEditText.getText().toString().trim();
+            String email = emailEditText.getText().toString().trim();
             String password = passwordEditText.getText().toString().trim();
-            viewModel.login(username, password);
+            viewModel.login(email, password);
         });
 
         // REGISTER: toggle mode on first click, register on second
@@ -157,7 +159,7 @@ public class LoginActivity extends AppCompatActivity {
 
             String username = usernameEditText.getText().toString().trim();
             String email    = emailEditText.getText().toString().trim();
-            String password = passwordEditText.getText().toString().trim();
+            String password = passwordEditText.getText().toString();
 
             viewModel.register(username, email, password);
         });

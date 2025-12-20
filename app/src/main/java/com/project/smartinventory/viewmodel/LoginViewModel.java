@@ -50,20 +50,21 @@ public class LoginViewModel extends AndroidViewModel {
         }
     }
 
-    // ------------ LOGIN: username + password ------------
+    // ------------ LOGIN: email + password ------------
 
     @MainThread
-    public void login(String username, String password) {
+    public void login(String email, String password) {
         _error.setValue(null);
 
-        if (isValidUsername(username) || isValidPassword(password)) {
+        // Invalid if email is bad OR password is bad
+        if (!isValidEmail(email) || !isValidPassword(password)) {
             _error.setValue("LOGIN_FAILED");
             return;
         }
 
         _isLoading.setValue(true);
 
-        authRepository.login(username, password, new AuthRepository.AuthCallback() {
+        authRepository.login(email, password, new AuthRepository.AuthCallback() {
             @Override
             public void onSuccess() {
                 prefs.edit().putBoolean("isLoggedIn", true).apply();
@@ -79,13 +80,14 @@ public class LoginViewModel extends AndroidViewModel {
         });
     }
 
-    // ------------ REGISTER: username + email + password ------------
+// ------------ REGISTER: username + email + password ------------
 
     @MainThread
     public void register(String username, String email, String password) {
         _error.setValue(null);
 
-        if (isValidUsername(username) || !isValidEmail(email) || isValidPassword(password)) {
+        // Invalid if username is empty OR email invalid OR password invalid
+        if (!isValidDisplayUsername(username) || !isValidEmail(email) || !isValidPassword(password)) {
             _error.setValue("REGISTER_FAILED");
             return;
         }
@@ -121,24 +123,24 @@ public class LoginViewModel extends AndroidViewModel {
 
     // ---------- Validation ----------
 
-    private boolean isValidUsername(String username) {
-        if (username == null) return true;
+    private boolean isValidDisplayUsername(String username) {
+        if (username == null) return false;
         String u = username.trim();
-        if (u.isEmpty()) return true;
-        return u.contains(" ") || u.contains("@");
+        if (u.isEmpty()) return false;
+        // allow letters/numbers/underscore/dash, 3-20 chars
+        return u.matches("^[A-Za-z0-9_\\-]{3,20}$");
     }
 
     private boolean isValidEmail(String email) {
         if (email == null) return false;
         String e = email.trim();
         if (e.isEmpty()) return false;
-        return e.contains("@") && e.contains(".");
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(e).matches();
     }
 
     private boolean isValidPassword(String password) {
-        if (password == null) return true;
-        String p = password.trim();
-        if (p.isEmpty()) return true;
-        return p.length() < 6;
+        if (password == null) return false;
+        if (password.isEmpty()) return false;
+        return password.length() >= 6;
     }
 }
